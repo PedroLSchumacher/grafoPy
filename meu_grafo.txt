@@ -1,1 +1,4 @@
-ImportError: attempted relative import with no known parent package
+3
+A B 1
+B C 2
+A C 3
