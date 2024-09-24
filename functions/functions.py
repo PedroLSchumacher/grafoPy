@@ -1,145 +1,159 @@
-# functions/grafo_functions.py
+import networkx as nx
+import json
+import os
 
-def imprimir_menu():
-    print("=-=-=-=-= > MENU DE AUTENTICAÇÃO < =-=-=-=-=")
-    print("1 - Admin")
-    print("2 - Usuario")
-    print("3 - Sair")
-
-def autenticar():
-    nome = input("Por favor, insira seu nome: ")
-
-    while True:
-        imprimir_menu()
-        escolha = input(f"Olá, {nome}. Escolha uma das opções (1, 2 ou 3): ")
-
-        if escolha == '1':
-            return nome, "admin"
-        elif escolha == '2':
-            return nome, "usuario"
-        elif escolha == '3':
-            print("Saindo do sistema. Até mais!")
-            return None, None
-        else:
-            print("Opção inválida. Tente novamente.")
-
-def fazer_autenticacao(nome, user):
-    if user == "admin":
-        print("Bem-vindo, Admin!")
-    elif user == "usuario":
-        print(f"Seja bem-vindo, {nome}!")
+# Função para carregar o grafo de um arquivo .txt
+def carregar_grafo_de_txt(nome_arquivo):
+    if os.path.exists(nome_arquivo):
+        with open(nome_arquivo, "r") as f:
+            try:
+                data = f.read().strip()
+                if data:
+                    return nx.node_link_graph(json.loads(data))
+                else:
+                    print("O arquivo de grafo está vazio. Inicializando com grafo vazio.")
+                    return nx.DiGraph()  # Inicializa grafo vazio
+            except json.JSONDecodeError:
+                print("Erro ao carregar o grafo. O arquivo não contém um JSON válido.")
+                return nx.DiGraph()  # Retorna um grafo vazio em caso de erro
     else:
-        print("Tipo de usuário não reconhecido.")
+        print(f"O arquivo {nome_arquivo} não existe. Criando um grafo vazio.")
+        return nx.DiGraph()
 
-class Grafo:
-    def __init__(self):
-        self.vertices = []
-        self.matriz_adjacencia = []
+# Função para salvar o grafo em um arquivo .txt
+def salvar_grafo_em_txt(grafo, nome_arquivo):
+    with open(nome_arquivo, "w") as f:
+        json.dump(nx.node_link_data(grafo), f)
 
-    def carregar_grafo(self, nome_arquivo):
+# Função para validar o peso entre 0 e 10
+def validar_peso():
+    while True:
         try:
-            with open(nome_arquivo, 'r') as arquivo:
-                linhas = arquivo.readlines()
-                num_vertices = int(linhas[0].strip())
-                self.vertices = []
-                self.matriz_adjacencia = [[0] * num_vertices for _ in range(num_vertices)]
-                
-                for linha in linhas[1:]:
-                    v1, v2, valor = linha.strip().split()
-                    valor = int(valor)
-                    self.adicionar_vertice(v1)
-                    self.adicionar_vertice(v2)
-                    self.adicionar_aresta(v1, v2, valor)
-        except FileNotFoundError:
-            print(f"Arquivo {nome_arquivo} não encontrado.")
-
-    def salvar_grafo(self, nome_arquivo):
-        with open(nome_arquivo, 'w') as arquivo:
-            arquivo.write(f"{len(self.vertices)}\n")
-            for i in range(len(self.vertices)):
-                for j in range(i, len(self.vertices)):
-                    if self.matriz_adjacencia[i][j] != 0:
-                        arquivo.write(f"{self.vertices[i]} {self.vertices[j]} {self.matriz_adjacencia[i][j]}\n")
-
-    def adicionar_vertice(self, vertice):
-        if vertice not in self.vertices:
-            self.vertices.append(vertice)
-            for linha in self.matriz_adjacencia:
-                linha.append(0)
-            self.matriz_adjacencia.append([0] * len(self.vertices))
-            print(f"Vértice {vertice} adicionado.")
-        else:
-            print(f"Vértice {vertice} já existe.")
-
-    def adicionar_aresta(self, vertice1, vertice2, valor):
-        if vertice1 in self.vertices and vertice2 in self.vertices:
-            indice1 = self.vertices.index(vertice1)
-            indice2 = self.vertices.index(vertice2)
-            self.matriz_adjacencia[indice1][indice2] = valor
-            self.matriz_adjacencia[indice2][indice1] = valor  # Para grafos não direcionados
-            print(f"Aresta entre {vertice1} e {vertice2} com valor {valor} adicionada.")
-        else:
-            print("Um ou ambos os vértices não foram encontrados.")
-
-    def consultar_vertice(self, vertice):
-        if vertice in self.vertices:
-            print(f"Vértice {vertice} existe no grafo.")
-        else:
-            print(f"Vértice {vertice} não encontrado.")
-
-    def consultar_aresta(self, vertice1, vertice2):
-        if vertice1 in self.vertices and vertice2 in self.vertices:
-            indice1 = self.vertices.index(vertice1)
-            indice2 = self.vertices.index(vertice2)
-            valor = self.matriz_adjacencia[indice1][indice2]
-            if valor != 0:
-                print(f"Aresta entre {vertice1} e {vertice2} tem valor {valor}.")
+            peso = int(input("De 0 a 10, o quão gostaria de executar esta relação? "))
+            if 0 <= peso <= 10:
+                return peso
             else:
-                print(f"Não há aresta entre {vertice1} e {vertice2}.")
-        else:
-            print("Um ou ambos os vértices não foram encontrados.")
+                print("Peso inválido. Informe um valor entre 0 e 10.")
+        except ValueError:
+            print("Entrada inválida. Informe um número entre 0 e 10.")
 
-    def remover_vertice(self, vertice):
-        if vertice in self.vertices:
-            indice = self.vertices.index(vertice)
-            self.vertices.pop(indice)
-            self.matriz_adjacencia.pop(indice)
-            for linha in self.matriz_adjacencia:
-                linha.pop(indice)
-            print(f"Vértice {vertice} removido.")
-        else:
-            print(f"Vértice {vertice} não encontrado.")
+# Verificar se uma tarefa existe
+def verificar_existencia_tarefa(grafo, tarefa):
+    if grafo.has_node(tarefa):
+        return True
+    else:
+        print(f"Tarefa '{tarefa}' não existe.")
+        return False
 
-    def remover_aresta(self, vertice1, vertice2):
-        if vertice1 in self.vertices and vertice2 in self.vertices:
-            indice1 = self.vertices.index(vertice1)
-            indice2 = self.vertices.index(vertice2)
-            self.matriz_adjacencia[indice1][indice2] = 0
-            self.matriz_adjacencia[indice2][indice1] = 0  # Para grafos não direcionados
-            print(f"Aresta entre {vertice1} e {vertice2} removida.")
-        else:
-            print("Um ou ambos os vértices não foram encontrados.")
+# Verificar se uma relação existe
+def verificar_existencia_relacao(grafo, tarefa1, tarefa2):
+    if grafo.has_edge(tarefa1, tarefa2):
+        return True
+    else:
+        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não existe.")
+        return False
 
-    def atualizar_vertice(self, vertice_antigo, vertice_novo):
-        if vertice_antigo in self.vertices:
-            indice = self.vertices.index(vertice_antigo)
-            self.vertices[indice] = vertice_novo
-            print(f"Vértice {vertice_antigo} atualizado para {vertice_novo}.")
-        else:
-            print(f"Vértice {vertice_antigo} não encontrado.")
+# Adicionar vértice (tarefa)
+def adicionar_vertice(grafo, vertice):
+    if not grafo.has_node(vertice):
+        grafo.add_node(vertice)
+        print(f"Tarefa '{vertice}' adicionada com sucesso.")
+    else:
+        print(f"Tarefa '{vertice}' já existe.")
 
-    def atualizar_aresta(self, vertice1, vertice2, novo_valor):
-        if vertice1 in self.vertices and vertice2 in self.vertices:
-            indice1 = self.vertices.index(vertice1)
-            indice2 = self.vertices.index(vertice2)
-            self.matriz_adjacencia[indice1][indice2] = novo_valor
-            self.matriz_adjacencia[indice2][indice1] = novo_valor  # Para grafos não direcionados
-            print(f"Aresta entre {vertice1} e {vertice2} atualizada para {novo_valor}.")
+# Adicionar aresta (relação)
+def adicionar_aresta(grafo, tarefa1, tarefa2, peso):
+    if tarefa1 in grafo and tarefa2 in grafo:
+        if tarefa1 != tarefa2:
+            grafo.add_edge(tarefa1, tarefa2, weight=peso)
+            print(f"Relação entre '{tarefa1}' e '{tarefa2}' adicionada com sucesso com peso {peso}.")
         else:
-            print("Um ou ambos os vértices não foram encontrados.")
+            print("Uma tarefa não pode se relacionar com ela mesma.")
+    else:
+        print("Ambas as tarefas precisam estar cadastradas.")
 
-    def listar_dados_grafo(self):
-        print(f"Vértices: {self.vertices}")
-        print("Matriz de Adjacência:")
-        for linha in self.matriz_adjacencia:
-            print(linha)
+# Consultar vértice (tarefa)
+def consultar_vertice(grafo, vertice):
+    if grafo.has_node(vertice):
+        adjacencias = list(grafo[vertice])
+        if adjacencias:
+            print(f"A tarefa '{vertice}' tem relações com: {adjacencias}")
+            for adj in adjacencias:
+                print(f"- Relacionado com '{adj}' com peso {grafo[vertice][adj]['weight']}")
+        else:
+            print(f"A tarefa '{vertice}' não tem relações.")
+    else:
+        print(f"Tarefa '{vertice}' não existe.")
+
+# Consultar aresta (relação)
+def consultar_aresta(grafo, tarefa1, tarefa2):
+    if grafo.has_edge(tarefa1, tarefa2):
+        peso = grafo[tarefa1][tarefa2]['weight']
+        print(f"A relação entre '{tarefa1}' e '{tarefa2}' existe com peso {peso}.")
+    else:
+        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não foi encontrada.")
+
+# Remover vértice (tarefa)
+def remover_vertice(grafo, vertice):
+    if grafo.has_node(vertice):
+        grafo.remove_node(vertice)
+        print(f"Tarefa '{vertice}' removida com sucesso.")
+    else:
+        print(f"Tarefa '{vertice}' não existe.")
+
+# Remover aresta (relação)
+def remover_aresta(grafo, tarefa1, tarefa2):
+    if grafo.has_edge(tarefa1, tarefa2):
+        grafo.remove_edge(tarefa1, tarefa2)
+        print(f"Relação entre '{tarefa1}' e '{tarefa2}' removida com sucesso.")
+    else:
+        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não existe.")
+
+# Atualizar vértice (nome da tarefa)
+def atualizar_vertice(grafo, vertice_antigo, vertice_novo):
+    if grafo.has_node(vertice_antigo):
+        nx.relabel_nodes(grafo, {vertice_antigo: vertice_novo}, copy=False)
+        print(f"Tarefa '{vertice_antigo}' atualizada para '{vertice_novo}'.")
+    else:
+        print(f"Tarefa '{vertice_antigo}' não existe.")
+
+# Atualizar aresta (relação)
+def atualizar_aresta(grafo, tarefa1, tarefa2, novo_peso):
+    if grafo.has_edge(tarefa1, tarefa2):
+        grafo[tarefa1][tarefa2]['weight'] = novo_peso
+        print(f"Peso da relação entre '{tarefa1}' e '{tarefa2}' atualizado para {novo_peso}.")
+    else:
+        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não foi encontrada.")
+
+# Listar dados do grafo
+def listar_grafo(grafo):
+    print("Tarefas no grafo: ", list(grafo.nodes))
+    print("Relações no grafo: ", list(grafo.edges(data=True)))
+
+    # Verifica se o grafo é um dígrafo (direcionado) ou grafo (não direcionado)
+    if isinstance(grafo, nx.DiGraph):
+        print("O grafo é um dígrafo (direcionado).")
+    else:
+        print("O grafo é um grafo (não direcionado).")
+
+    # Verifica se o grafo é valorado ou não
+    valorado = any('weight' in grafo[edge[0]][edge[1]] for edge in grafo.edges)
+    if valorado:
+        print("O grafo é valorado (tem pesos).")
+    else:
+        print("O grafo não é valorado (não tem pesos).")
+
+    # Verifica se o grafo tem laços (vértices com relações a eles mesmos)
+    tem_laco = any(grafo.has_edge(node, node) for node in grafo.nodes)
+    if tem_laco:
+        print("O grafo tem laços.")
+    else:
+        print("O grafo não tem laços.")
+
+    # Exibir o grau de cada tarefa
+    for node in grafo.nodes:
+        print(f"O grau da tarefa '{node}' é {grafo.degree[node]}.")
+
+# Salvar e mostrar grafo
+def salvar_e_mostrar_grafo():
+    print("Grafo salvo e mostrado com sucesso.")

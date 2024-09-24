@@ -1,4 +1,1 @@
-3
-A B 1
-B C 2
-A C 3
+{"directed": true, "multigraph": false, "graph": {}, "nodes": [{"id": "a"}, {"id": "b"}], "links": []}

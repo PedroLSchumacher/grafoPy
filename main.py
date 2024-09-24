@@ -1,94 +1,124 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-import re
+from functions.functions import (
+    carregar_grafo_de_txt,
+    salvar_grafo_em_txt,
+    adicionar_vertice,
+    adicionar_aresta,
+    consultar_vertice,
+    consultar_aresta,
+    remover_vertice,
+    remover_aresta,
+    atualizar_vertice,
+    atualizar_aresta,
+    listar_grafo,
+    salvar_e_mostrar_grafo,
+    validar_peso,
+    verificar_existencia_tarefa,
+    verificar_existencia_relacao
+)
 
-def validar_entrada(texto):
-    if texto and not re.match("^[A-Za-z0-9]+$", texto):
-        print("Entrada inválida! Por favor, insira apenas letras.")
-        return False
-    return True
+nome_arquivo_grafo = "meu_grafo.txt"
 
-def criar_grafo():
-    G = nx.Graph()
-    
-    print("Insira os elementos (um por vez). Quando terminar, digite 'sair'.")
+def menu_usuario():
+    grafo_tarefas = carregar_grafo_de_txt(nome_arquivo_grafo)
+
     while True:
-        no = input("Digite um elemento (ou digite 'sair' para terminar): ").strip().upper()
-        if no == "SAIR":
+        print("\n=== MENU DE TAREFAS ===")
+        print("1. Adicionar tarefa (vértice)")
+        print("2. Adicionar relação entre tarefas (aresta)")
+        print("3. Consultar tarefa")
+        print("4. Consultar relação")
+        print("5. Remover tarefa")
+        print("6. Remover relação")
+        print("7. Atualizar tarefa")
+        print("8. Atualizar relação")
+        print("9. Salvar e visualizar grafo")
+        print("10. Listar dados do grafo")
+        print("0. Sair")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            vertice = input("Informe o nome da tarefa a ser adicionada: ")
+            adicionar_vertice(grafo_tarefas, vertice)
+
+        elif opcao == "2":
+            tarefa1 = input("Informe a primeira tarefa: ")
+            tarefa2 = input("Informe a segunda tarefa: ")
+            if verificar_existencia_tarefa(grafo_tarefas, tarefa1) and verificar_existencia_tarefa(grafo_tarefas, tarefa2):
+                peso = validar_peso()  # Valida o peso entre 0 e 10
+                adicionar_aresta(grafo_tarefas, tarefa1, tarefa2, peso)
+
+        elif opcao == "3":
+            vertice = input("Informe o nome da tarefa para consulta: ")
+            if verificar_existencia_tarefa(grafo_tarefas, vertice):
+                consultar_vertice(grafo_tarefas, vertice)
+
+        elif opcao == "4":
+            tarefa1 = input("Informe a primeira tarefa: ")
+            tarefa2 = input("Informe a segunda tarefa: ")
+            if verificar_existencia_relacao(grafo_tarefas, tarefa1, tarefa2):
+                consultar_aresta(grafo_tarefas, tarefa1, tarefa2)
+
+        elif opcao == "5":
+            vertice = input("Informe a tarefa a ser removida: ")
+            if verificar_existencia_tarefa(grafo_tarefas, vertice):
+                remover_vertice(grafo_tarefas, vertice)
+
+        elif opcao == "6":
+            tarefa1 = input("Informe a primeira tarefa: ")
+            tarefa2 = input("Informe a segunda tarefa: ")
+            if verificar_existencia_relacao(grafo_tarefas, tarefa1, tarefa2):
+                remover_aresta(grafo_tarefas, tarefa1, tarefa2)
+
+        elif opcao == "7":
+            vertice_antigo = input("Informe o nome da tarefa atual: ")
+            vertice_novo = input("Informe o novo nome da tarefa: ")
+            if verificar_existencia_tarefa(grafo_tarefas, vertice_antigo):
+                atualizar_vertice(grafo_tarefas, vertice_antigo, vertice_novo)
+
+        elif opcao == "8":
+            tarefa1 = input("Informe a primeira tarefa: ")
+            tarefa2 = input("Informe a segunda tarefa: ")
+            if verificar_existencia_relacao(grafo_tarefas, tarefa1, tarefa2):
+                novo_peso = validar_peso()
+                atualizar_aresta(grafo_tarefas, tarefa1, tarefa2, novo_peso)
+
+        elif opcao == "9":
+            salvar_e_mostrar_grafo()
+
+        elif opcao == "10":
+            listar_grafo(grafo_tarefas)
+
+        elif opcao == "0":
+            salvar_grafo_em_txt(grafo_tarefas, nome_arquivo_grafo)
+            print("Grafo salvo. Encerrando o programa...")
             break
-        if validar_entrada(no):
-            G.add_node(no)
-    
-    print("\nInsira as conexões (arestas) entre os elementos. Exemplo: PA C")
-    print("Quando terminar, digite 'sair'.")
+
+        else:
+            print("Opção inválida. Tente novamente.")
+
+def menu_principal():
     while True:
-        aresta = input("Digite uma conexão (ou digite 'sair' para terminar): ").strip().upper()
-        if aresta == "SAIR":
+        print("\n=== MENU PRINCIPAL ===")
+        print("1. Admin")
+        print("2. Usuário")
+        print("0. Sair")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            print("Parabéns, você é um admin.")
+            # Admin pode ter funcionalidades extras no futuro
+
+        elif opcao == "2":
+            menu_usuario()
+
+        elif opcao == "0":
+            print("Saindo do programa...")
             break
-        try:
-            u, v = aresta.split()
-            if validar_entrada(u) and validar_entrada(v):
-                if u in G.nodes and v in G.nodes:
-                    G.add_edge(u, v)
-                    
-                    # Verificar se formou um subgrafo
-                    if len(G.nodes) == 2 and len(G.edges) == 1:
-                        print("Um subgrafo foi formado com 2 nós e 1 aresta!")
-                else:
-                    print("Um ou ambos os elementos não existem. Tente novamente.")
-        except ValueError:
-            print("Entrada inválida. Certifique-se de digitar dois elementos separados por espaço.")
-    
-    return G
 
-def mostrar_graus(G):
-    graus = dict(G.degree())
-    print("\nGrau de cada elemento:")
-    for no, grau in graus.items():
-        print(f"Elemento {no}: Grau {grau}")
-
-def perguntar_caminho(G):
-    print(f"\Elementos disponíveis: {', '.join(G.nodes)}")
-    
-    partida = input("Informe o local de partida: ").strip().upper()
-    while not validar_entrada(partida):
-        partida = input("Informe o local de partida: ").strip().upper()
-
-    chegada = input("Informe o local de chegada: ").strip().upper()
-    while not validar_entrada(chegada):
-        chegada = input("Informe o local de chegada: ").strip().upper()
-
-    if partida not in G.nodes or chegada not in G.nodes:
-        print("Local inexistente. Por favor, tente novamente.")
-        return perguntar_caminho(G)
-    
-    return partida, chegada
-
-def calcular_melhor_rota(G, partida, chegada):
-    try:
-        caminho = nx.shortest_path(G, source=partida, target=chegada)
-        return caminho
-    except nx.NetworkXNoPath:
-        return None
-
-def visualizar_grafo(G):
-    pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True, node_color='skyblue', node_size=2000, font_size=16, font_weight='bold')
-    plt.show()
-
-def main():
-    G = criar_grafo()
-    visualizar_grafo(G)
-    
-    mostrar_graus(G)  # Mostrar o grau de cada nó
-
-    partida, chegada = perguntar_caminho(G)
-    melhor_rota = calcular_melhor_rota(G, partida, chegada)
-    
-    if melhor_rota:
-        print(f"O melhor caminho de {partida} até {chegada} é: {' -> '.join(melhor_rota)}")
-    else:
-        print(f"Não existe caminho entre {partida} e {chegada}.")
+        else:
+            print("Opção inválida. Tente novamente.")
 
 if __name__ == "__main__":
-    main()
+    menu_principal()
