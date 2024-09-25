@@ -1,1 +1,1 @@
-{"directed": true, "multigraph": false, "graph": {}, "nodes": [{"id": "jogar dado"}, {"id": "fazer churrasco"}], "links": []}
+{"directed": true, "multigraph": false, "graph": {}, "nodes": [{"id": "jogar bola"}, {"id": "tomar banho"}], "links": [{"weight": 1, "source": "jogar bola", "target": "tomar banho"}]}
