@@ -25,24 +25,23 @@ def salvar_grafo_em_txt(grafo, nome_arquivo):
     with open(nome_arquivo, "w") as f:
         json.dump(nx.node_link_data(grafo), f)
 
-# Função para validar o peso entre 0 e 10
+# Função para validar o peso entre 0 e 3
 def validar_peso():
     while True:
         try:
-            peso = int(input("De 0 a 10, o quão gostaria de executar esta relação? "))
-            if 0 <= peso <= 10:
+            peso = int(input("De 0 a 3, o quão você gostaria de realizar esta tarefa? lembrando que 1 = Estou bem posso fazer, 2 = estou mais ou menos e 3 = estou cansado, melhor relaxar: "))
+            if 0 <= peso <= 3:
                 return peso
             else:
-                print("Peso inválido. Informe um valor entre 0 e 10.")
+                print("Peso inválido. Informe um valor entre 0 e 3.")
         except ValueError:
-            print("Entrada inválida. Informe um número entre 0 e 10.")
+            print("Entrada inválida. Informe um número entre 0 e 3.")
 
 # Verificar se uma tarefa existe
 def verificar_existencia_tarefa(grafo, tarefa):
     if grafo.has_node(tarefa):
         return True
     else:
-        print(f"Tarefa '{tarefa}' não existe.")
         return False
 
 # Verificar se uma relação existe
@@ -79,11 +78,12 @@ def consultar_vertice(grafo, vertice):
         if adjacencias:
             print(f"A tarefa '{vertice}' tem relações com: {adjacencias}")
             for adj in adjacencias:
-                print(f"- Relacionado com '{adj}' com peso {grafo[vertice][adj]['weight']}")
+                peso = grafo[vertice][adj]['weight']
+                print(f"Peso da relação com '{adj}': {peso}")
         else:
-            print(f"A tarefa '{vertice}' não tem relações.")
+            print(f"A tarefa '{vertice}' não tem relações com outras tarefas.")
     else:
-        print(f"Tarefa '{vertice}' não existe.")
+        print(f"Tarefa '{vertice}' não encontrada.")
 
 # Consultar aresta (relação)
 def consultar_aresta(grafo, tarefa1, tarefa2):
@@ -91,7 +91,7 @@ def consultar_aresta(grafo, tarefa1, tarefa2):
         peso = grafo[tarefa1][tarefa2]['weight']
         print(f"A relação entre '{tarefa1}' e '{tarefa2}' existe com peso {peso}.")
     else:
-        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não foi encontrada.")
+        print(f"A relação entre '{tarefa1}' e '{tarefa2}' não existe.")
 
 # Remover vértice (tarefa)
 def remover_vertice(grafo, vertice):
@@ -99,7 +99,7 @@ def remover_vertice(grafo, vertice):
         grafo.remove_node(vertice)
         print(f"Tarefa '{vertice}' removida com sucesso.")
     else:
-        print(f"Tarefa '{vertice}' não existe.")
+        print(f"Tarefa '{vertice}' não encontrada.")
 
 # Remover aresta (relação)
 def remover_aresta(grafo, tarefa1, tarefa2):
@@ -107,15 +107,19 @@ def remover_aresta(grafo, tarefa1, tarefa2):
         grafo.remove_edge(tarefa1, tarefa2)
         print(f"Relação entre '{tarefa1}' e '{tarefa2}' removida com sucesso.")
     else:
-        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não existe.")
+        print(f"A relação entre '{tarefa1}' e '{tarefa2}' não existe.")
 
-# Atualizar vértice (nome da tarefa)
+# Atualizar vértice (tarefa)
 def atualizar_vertice(grafo, vertice_antigo, vertice_novo):
     if grafo.has_node(vertice_antigo):
-        nx.relabel_nodes(grafo, {vertice_antigo: vertice_novo}, copy=False)
-        print(f"Tarefa '{vertice_antigo}' atualizada para '{vertice_novo}'.")
+        grafo.add_node(vertice_novo)
+        for adj in list(grafo.adjacency()):
+            if vertice_antigo in grafo[adj[0]]:
+                grafo.add_edge(vertice_novo, adj[0], weight=grafo[adj[0]][vertice_antigo]['weight'])
+        grafo.remove_node(vertice_antigo)
+        print(f"Tarefa '{vertice_antigo}' atualizada para '{vertice_novo}' com sucesso.")
     else:
-        print(f"Tarefa '{vertice_antigo}' não existe.")
+        print(f"Tarefa '{vertice_antigo}' não encontrada.")
 
 # Atualizar aresta (relação)
 def atualizar_aresta(grafo, tarefa1, tarefa2, novo_peso):
@@ -123,37 +127,74 @@ def atualizar_aresta(grafo, tarefa1, tarefa2, novo_peso):
         grafo[tarefa1][tarefa2]['weight'] = novo_peso
         print(f"Peso da relação entre '{tarefa1}' e '{tarefa2}' atualizado para {novo_peso}.")
     else:
-        print(f"Relação entre '{tarefa1}' e '{tarefa2}' não foi encontrada.")
+        print(f"A relação entre '{tarefa1}' e '{tarefa2}' não existe.")
 
 # Listar dados do grafo
+# Função para listar o grafo com informações adicionais
 def listar_grafo(grafo):
-    print("Tarefas no grafo: ", list(grafo.nodes))
-    print("Relações no grafo: ", list(grafo.edges(data=True)))
+    # Tipo do grafo: Grafo ou Dígrafo
+    tipo_grafo = "Dígrafo" if isinstance(grafo, nx.DiGraph) else "Grafo"
+    print(f"Tipo do grafo: {tipo_grafo}")
 
-    # Verifica se o grafo é um dígrafo (direcionado) ou grafo (não direcionado)
-    if isinstance(grafo, nx.DiGraph):
-        print("O grafo é um dígrafo (direcionado).")
+    # Verificar se o grafo é valorado (tem pesos nas arestas)
+    valorado = all('weight' in data for u, v, data in grafo.edges(data=True))
+    print(f"Grafo valorado: {'Sim' if valorado else 'Não'}")
+
+    # Listar vértices e graus
+    print("\nVértices e graus:")
+    for vertice in grafo.nodes():
+        grau_entrada = grafo.in_degree(vertice) if isinstance(grafo, nx.DiGraph) else None
+        grau_saida = grafo.out_degree(vertice) if isinstance(grafo, nx.DiGraph) else None
+        grau_total = grafo.degree(vertice)
+        
+        if grau_entrada is not None and grau_saida is not None:
+            print(f"Tarefa '{vertice}' - Grau de entrada: {grau_entrada}, Grau de saída: {grau_saida}, Grau total: {grau_total}")
+        else:
+            print(f"Tarefa '{vertice}' - Grau total: {grau_total}")
+
+    # Verificar e listar arestas
+    print("\nArestas:")
+    for tarefa1, tarefa2, dados in grafo.edges(data=True):
+        peso = dados.get('weight', 'Sem peso')
+        print(f"Relação entre '{tarefa1}' e '{tarefa2}' com peso: {peso}")
+    
+    # Verificar a presença de laços (auto-arestas)
+    lacos = list(nx.selfloop_edges(grafo))
+    if lacos:
+        print("\nO grafo contém laços (auto-arestas) nas seguintes tarefas:")
+        for tarefa1, tarefa2 in lacos:
+            print(f"Laço na tarefa '{tarefa1}'")
     else:
-        print("O grafo é um grafo (não direcionado).")
+        print("\nO grafo não contém laços (auto-arestas).")
 
-    # Verifica se o grafo é valorado ou não
-    valorado = any('weight' in grafo[edge[0]][edge[1]] for edge in grafo.edges)
-    if valorado:
-        print("O grafo é valorado (tem pesos).")
+
+# Função para sugerir a próxima tarefa com base no estado do usuário
+def sugerir_proxima_tarefa(grafo, estado_usuario, ultima_atividade):
+    tarefas_disponiveis = []
+
+    # Pesos baseados no estado do usuário
+    pesos = {
+        '1': 1,  # Estou bem, posso fazer
+        '2': 2,  # Estou mais ou menos
+        '3': 3   # Estou cansado, melhor relaxar
+    }
+
+    # Encontrar tarefas que o usuário pode realizar
+    for adj in grafo[ultima_atividade]:
+        peso = grafo[ultima_atividade][adj]['weight']
+        if peso == pesos[estado_usuario]:
+            tarefas_disponiveis.append(adj)
+
+    # Sugerir a próxima tarefa
+    if tarefas_disponiveis:
+        print(f"Sugestão de tarefa: {tarefas_disponiveis[0]} com peso correspondente ao seu estado.")
     else:
-        print("O grafo não é valorado (não tem pesos).")
+        print("Não há tarefas disponíveis para o seu estado atual. Quem sabe você não adiciona mais algumas tarefas e algumas relações para sua rotina ficar mais completa. O que me diz? Caso não queira, digite 0.")
 
-    # Verifica se o grafo tem laços (vértices com relações a eles mesmos)
-    tem_laco = any(grafo.has_edge(node, node) for node in grafo.nodes)
-    if tem_laco:
-        print("O grafo tem laços.")
-    else:
-        print("O grafo não tem laços.")
 
-    # Exibir o grau de cada tarefa
-    for node in grafo.nodes:
-        print(f"O grau da tarefa '{node}' é {grafo.degree[node]}.")
+# Função para zerar o grafo (apagar o arquivo .txt)
+def zerar_grafo(nome_arquivo):
+    with open(nome_arquivo, "w") as f:
+        f.write("")  # Limpa o conteúdo do arquivo
+    print(f"O conteúdo do arquivo '{nome_arquivo}' foi apagado.")
 
-# Salvar e mostrar grafo
-def salvar_e_mostrar_grafo():
-    print("Grafo salvo e mostrado com sucesso.")
