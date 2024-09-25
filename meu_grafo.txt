@@ -1,1 +1,0 @@
-{"directed": true, "multigraph": false, "graph": {}, "nodes": [{"id": "Tomar caf\u00e9"}, {"id": "Dormir um pouco"}], "links": []}
