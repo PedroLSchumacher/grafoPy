@@ -3,9 +3,9 @@ import json  # Importa a biblioteca json para manipulação de arquivos JSON
 import os  # Importa a biblioteca os para interações com o sistema operacional
 
 # Função para carregar o grafo de um arquivo .txt
-def carregar_grafo_de_txt(nome_arquivo):  
-    if os.path.exists(nome_arquivo):  # Verifica se o arquivo existe
-        with open(nome_arquivo, "r") as f:  # Abre o arquivo para leitura
+def carregar_grafo_de_txt(matriz):  
+    if os.path.exists(matriz):  # Verifica se o arquivo existe
+        with open(matriz, "r") as f:  # Abre o arquivo para leitura
             try:
                 data = f.read().strip()  # Lê o conteúdo do arquivo e remove espaços em branco
                 if data:
@@ -17,12 +17,12 @@ def carregar_grafo_de_txt(nome_arquivo):
                 print("Erro ao carregar o grafo. O arquivo não contém um JSON válido.")
                 return nx.DiGraph()  # Retorna um grafo vazio em caso de erro de decodificação
     else:
-        print(f"O arquivo {nome_arquivo} não existe. Criando um grafo vazio.")
+        print(f"O arquivo {matriz} não existe. Criando um grafo vazio.")
         return nx.DiGraph()  # Retorna um grafo vazio se o arquivo não existir
 
 # Função para salvar o grafo em um arquivo .txt
-def salvar_grafo_em_txt(grafo, nome_arquivo):  
-    with open(nome_arquivo, "w") as f:  # Abre o arquivo para escrita
+def salvar_grafo_em_txt(grafo, matriz):  
+    with open(matriz, "w") as f:  # Abre o arquivo para escrita
         json.dump(nx.node_link_data(grafo), f)  # Converte o grafo para JSON e escreve no arquivo
 
 # Função para validar o peso entre 0 e 3
@@ -33,9 +33,9 @@ def validar_peso():
             if 1 <= peso <= 3:  # Verifica se o peso está no intervalo válido
                 return peso  # Retorna o peso válido
             else:
-                print("Peso inválido. Informe um valor entre 1 e 3.")
+                print("Peso inválido. Informe um valor de 1 a 3.")
         except ValueError:
-            print("Entrada inválida. Informe um número entre 1 e 3.")  # Exibe mensagem de erro em caso de valor inválido
+            print("Entrada inválida. Informe o valor de 1 a 3.")  # Exibe mensagem de erro em caso de valor inválido
 
 # Verificar se uma tarefa existe
 def verificar_existencia_tarefa(grafo, tarefa):
@@ -194,8 +194,8 @@ def sugerir_proxima_tarefa(grafo, estado_usuario, ultima_atividade):
 
 
 # Função para zerar o grafo (apagar o arquivo .txt)
-def zerar_grafo(nome_arquivo):
-    with open(nome_arquivo, "w") as f:
+def zerar_grafo(matriz):
+    with open(matriz, "w") as f:
         f.write("")  # Limpa o conteúdo do arquivo
-    print(f"O conteúdo do arquivo '{nome_arquivo}' foi apagado.")
+    print(f"O conteúdo do arquivo '{matriz}' foi apagado.")
 

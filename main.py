@@ -18,10 +18,10 @@ from functions.functions import (
     zerar_grafo
 )
 
-nome_arquivo_grafo = "meu_grafo.txt"
+arquivo_grafo = "meu_grafo.txt"
 
 def menu_usuario():
-    grafo_tarefas = carregar_grafo_de_txt(nome_arquivo_grafo)
+    grafo_tarefas = carregar_grafo_de_txt(arquivo_grafo)
 
     # Menu para escolher entre sugestão de próxima atividade ou editar a rotina
     print("\n=== O QUE VOCÊ DESEJA FAZER? ===")
@@ -138,7 +138,7 @@ def menu_usuario():
                             print("Não há tarefas ou relações cadastradas.")
 
                 elif opcao == "0":
-                    salvar_grafo_em_txt(grafo_tarefas, nome_arquivo_grafo)
+                    salvar_grafo_em_txt(grafo_tarefas, arquivo_grafo)
                     print("Tarefa salva. Encerrando o programa...")
                     break
 
@@ -146,8 +146,8 @@ def menu_usuario():
                     print("Opção inválida. Tente novamente.")
 
 def menu_principal():
-    nome_arquivo = "meu_grafo.txt"  # Defina o nome do seu arquivo aqui
-    grafo = carregar_grafo_de_txt(nome_arquivo)
+    matriz_grafo = "meu_grafo.txt"  # Defina o nome do seu arquivo aqui
+    grafo = carregar_grafo_de_txt(matriz_grafo)
 
     while True:
         print("\n=== MENU PRINCIPAL ===")
@@ -166,7 +166,7 @@ def menu_principal():
             menu_usuario()
 
         elif opcao == "3":
-            zerar_grafo(nome_arquivo)
+            zerar_grafo(matriz_grafo)
             grafo = nx.DiGraph()
             print("Sua rotina está vazia.")
 
