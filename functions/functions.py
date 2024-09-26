@@ -144,7 +144,7 @@ def listar_grafo(grafo):
     # Listar vértices e graus
     print("\nVértices e graus:")
     for vertice in grafo.nodes():
-        grau_entrada = grafo.in_degree(vertice) if isinstance(grafo, nx.DiGraph) else None
+        grau_entrada = grafo.in_degree(vertice) if isinstance(grafo, nx.DiGraph) else None 
         grau_saida = grafo.out_degree(vertice) if isinstance(grafo, nx.DiGraph) else None
         grau_total = grafo.degree(vertice)
         
